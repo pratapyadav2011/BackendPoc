@@ -24,8 +24,6 @@
   "scripts": {
     "start": "nodemon app.js",
     "swagger-autogen": "node ./swagger/swagger.js",
-    "build": "rimraf build && NODE_ENV=production webpack --config ./webpack.dev.config.js",
-    "buildDev": "rimraf build && NODE_ENV=development webpack --config ./webpack.dev.config.js",
     "test": "jest --coverage",
     "jsdocs": "./node_modules/.bin/jsdoc src/controllers/",
     "sonarqube": "sonar-scanner"
