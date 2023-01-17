@@ -1,12 +1,15 @@
-const models = require("../../models");
-const { dbService } = require("../../services");
-const { STATUS } = require("../../constants/constants");
-const Mongoose = require("mongoose");
-const fs = require("fs");
-const tokenSource = require("./user_tokens.json");
-const firebase_admin = require("firebase-admin");
+const models = require('../../models');
+const { dbService } = require('../../services');
+const { STATUS } = require('../../constants/constants');
+const Mongoose = require('mongoose');
+const fs = require('fs');
+const tokenSource = require('./user_tokens.json');
+const firebase_admin = require('firebase-admin');
+const serviceAccount = require('./firebase.json');
 
-const admin = firebase_admin.initializeApp();
+const admin = firebase_admin.initializeApp({
+  credential: firebase_admin.credential.cert(serviceAccount),
+});
 
 const getUsersFromFeature = async (FeatureId) => {
   try {
@@ -81,18 +84,18 @@ const filterUsersFromScenario = async (
 };
 
 const notifyUsers = async (userList) => {
-  const templateId = "T001";
+  const templateId = 'T001';
   const req = {
     body: {
-        title: 'from scenario',
-        body: 'from scenario', 
-        metadata: {
-            templateId
-        }
-    }
-  }
-    sendFirebaseMessage(req)
-    console.log("notify kardiya->", userList);
+      title: 'from scenario',
+      body: 'from scenario',
+      metadata: {
+        templateId,
+      },
+    },
+  };
+  sendFirebaseMessage(req);
+  console.log('notify kardiya->', userList);
 };
 
 const addEvent = async (req) => {
@@ -106,9 +109,9 @@ const addEvent = async (req) => {
 
     const checkScenario = await checkForScenario(newEvent._id); // will not be true always
     if (checkScenario) {
-      console.log("scenario exists");
+      console.log('scenario exists');
     } else if (!checkScenario) {
-      console.log("scenario does not exists");
+      console.log('scenario does not exists');
       await notifyUsers(filteredUserFromfid.UserIds);
     }
 
@@ -190,8 +193,8 @@ const addScenario = async (req) => {
     } = req.body;
     let keys = Object.keys(applicableGroup);
     let values = Object.values(applicableGroup);
-    console.log("keys", keys);
-    console.log("values", values);
+    console.log('keys', keys);
+    console.log('values', values);
     /*let pipeline = [
           {$match:{
                   wishList:{$in:[Mongoose.Types.ObjectId(domainId),Mongoose.Types.ObjectId(subDomainId)]}
@@ -208,17 +211,17 @@ const addScenario = async (req) => {
     };
 
     if (applicableGroup.companyName) {
-      matchObj["companyName"] = { $in: applicableGroup.companyName };
+      matchObj['companyName'] = { $in: applicableGroup.companyName };
     }
     if (applicableGroup.location) {
-      matchObj["location"] = { $in: applicableGroup.location };
+      matchObj['location'] = { $in: applicableGroup.location };
     }
     if (applicableGroup.occupation) {
-      matchObj["occupation"] = { $in: applicableGroup.occupation };
+      matchObj['occupation'] = { $in: applicableGroup.occupation };
     }
 
     let pipeline = [{ $match: matchObj }];
-    console.log("d", pipeline);
+    console.log('d', pipeline);
     const userData = await dbService.dataAggregation(models.Users, pipeline);
 
     /* let obj = {
@@ -308,16 +311,16 @@ const addUsersToFeatures = async (userId, featureIds) => {
 
 const storeFirebaseToken = (req) => {
   const { token: newToken } = req.body;
-  console.log('received token', newToken)
+  console.log('received token', newToken);
   if (newToken) {
     try {
       tokenSource[0].token = newToken;
       fs.writeFileSync(
-        "src/controllers/upa/user_tokens.json",
+        'src/controllers/upa/user_tokens.json',
         JSON.stringify(tokenSource, null, 2)
       );
     } catch (e) {
-      console.error("Failed to write", e);
+      console.error('Failed to write', e);
     }
   } else {
   }
@@ -328,10 +331,10 @@ const sendFirebaseMessage = async (req) => {
     const { title, body, metadata } = req.body;
     if (!title || !body) {
       // throw new Error('Invalid message format')
-      console.log("rejecting");
-      rej("invalid message format");
+      console.log('rejecting');
+      rej('invalid message format');
     }
-    console.log('fcm token', tokenSource[0].token)
+    console.log('fcm token', tokenSource[0].token);
     try {
       const result = await admin
         .messaging()
@@ -339,14 +342,15 @@ const sendFirebaseMessage = async (req) => {
           notification: { title, body },
           data: metadata,
           token: tokenSource[0].token,
-        }).catch(e => {
-            console.error('failed to send', e)
         })
+        .catch((e) => {
+          console.error('failed to send', e);
+        });
 
       res(result);
     } catch (er) {
-      console.log("error sending message", er);
-      rej("error sending message");
+      console.log('error sending message', er);
+      rej('error sending message');
     }
   });
 };
