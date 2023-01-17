@@ -1,0 +1,22 @@
+resources:
+  repositories:
+    - repository: pipeline-templates
+      type: git
+      name: AI_Doctor/pipeline-templates
+
+trigger:
+  - upa_event
+
+name: $(Date:yyyyMMdd)_$(Hours)$(Minutes)$(Seconds) #Do Not Change
+
+jobs:
+  - template: AIDoctorWebV1-main.yml@pipeline-templates
+    parameters:
+      # RUN-CI: ${{ variables.RUN-CI }}
+      run_ci: "true"
+      run_sonar: $(Sonar)
+      run_secops: $(SecOpsFortify)
+      run_release: $(Release)
+      sonar_project_name: "jio-enterprise-ram-upload"
+      sonar_project_key: "jio-enterprise-ram-upload"
+      sonar_project_version: "jio-enterprise-ram-upload"
